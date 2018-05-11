@@ -15,7 +15,7 @@ public class RxUtils {
         return upstream -> {
             Observable<T> shared = upstream.share();
             return shared
-                    .buffer(upstream.debounce(200, TimeUnit.MILLISECONDS))
+                    .buffer(upstream.debounce(350, TimeUnit.MILLISECONDS))
                     .filter(list -> list.size()>1)
                     .map(list -> list.get(0));
 
