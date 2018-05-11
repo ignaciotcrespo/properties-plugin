@@ -2,18 +2,28 @@ package com.github.ignaciotcrespo.ags;
 
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableTransformer;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.MouseEvent;
 import java.util.concurrent.TimeUnit;
 
 public class RxUtils {
 
-    public static <T>Observable<T> doubleClick(Observable<T> obs){
-        Observable<T> shared = obs.share();
-        return shared
-                .buffer(obs.debounce(200, TimeUnit.MILLISECONDS))
-                .filter(list -> list.size()>1)
-                .map(list -> list.get(0));
+    @NotNull
+    public static  <T> ObservableTransformer<T, T> doubleClick() {
+        return upstream -> {
+            Observable<T> shared = upstream.share();
+            return shared
+                    .buffer(upstream.debounce(200, TimeUnit.MILLISECONDS))
+                    .filter(list -> list.size()>1)
+                    .map(list -> list.get(0));
 
+        };
     }
+
+    public static <R> ObservableTransformer<R, R> avoidFastClicks() {
+        return upstream -> upstream.throttleFirst(1, TimeUnit.SECONDS);
+    }
+
 }

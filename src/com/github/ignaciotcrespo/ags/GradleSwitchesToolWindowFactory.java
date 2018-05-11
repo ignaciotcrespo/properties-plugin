@@ -1,280 +1,97 @@
 package com.github.ignaciotcrespo.ags;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.table.JBTable;
-import io.reactivex.Emitter;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.io.*;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
-
-
-    static class Item {
-        String name;
-        String value;
-        String path;
-
-        public Item(String name, String value, String path) {
-            this.name = name;
-            this.value = value;
-            this.path = path;
-        }
-    }
-
-    static class ValidFile {
-        File file;
-        String projectRootFolder;
-
-        public ValidFile(File file, String projectRootFolder) {
-            this.file = file;
-            this.projectRootFolder = projectRootFolder;
-        }
-
-        public String getRelativePath() {
-            return file.toString().substring(projectRootFolder.length());
-        }
-    }
-
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
 
-        List<Object> items = new ArrayList<>();
+        PropertiesPresenter presenter = new PropertiesPresenter();
 
-        PublishSubject<MouseEvent> clicks = PublishSubject.create();
+        JPanel panel = createPanel();
 
+        createRefreshButton(project, presenter, panel);
+        createTable(project, presenter, panel);
+
+        showContent(toolWindow, panel);
+
+        presenter.refreshPropertiesData(project);
+
+        listenForQuickReferenceLoaded(presenter, panel);
+        presenter.refreshHtmlQuickReference();
+    }
+
+    @NotNull
+    private JPanel createPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+        return panel;
+    }
+
+    private void showContent(@NotNull ToolWindow toolWindow, JPanel panel) {
+        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        Content content = contentFactory.createContent(panel, "", false);
+        toolWindow.getContentManager().addContent(content);
+    }
+
+    private void createTable(@NotNull Project project, PropertiesPresenter presenter, JPanel panel) {
         //JTable table = new TreeTable(new ListTreeTableModel());
         JBTable table = new JBTable();
         table.setExpandableItemsEnabled(true);
-        DefaultTableModel tableModel = new PropsTableModel();
-        tableModel.setColumnIdentifiers(new Object[]{"File", "Name", "Value"});
-
-        table.setModel(tableModel);
-
+        table.setModel(presenter.getTableModel());
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                clicks.onNext(evt);
+                int row = table.rowAtPoint(evt.getPoint());
+                if(row >=0) {
+                    presenter.itemClicked(row, project);
+                }
             }
         });
-        RxUtils.doubleClick(clicks)
-             //   .throttleLast(250, TimeUnit.MILLISECONDS)
-                .subscribe(evt -> {
-                    int row = table.rowAtPoint(evt.getPoint());
-                    int col = table.columnAtPoint(evt.getPoint());
-                    if (row >= 0 && col >= 0) {
-                        Object item = items.get(row);
-                        if (item instanceof ValidFile) {
-                            openValidFile(project, table, (ValidFile) item);
-                        } else {
-                            while (--row >= 0) {
-                                item = items.get(row);
-                                if (item instanceof ValidFile) {
-                                    openValidFile(project, table, (ValidFile) item);
-                                    break;
-                                }
-                            }
-                        }
-
-                    }
-                });
-
-
         JScrollPane tableContainer = new JBScrollPane(table);
         tableContainer.setLayout(new ScrollPaneLayout());
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+        panel.add(tableContainer);
+    }
+
+    private void createRefreshButton(@NotNull Project project, PropertiesPresenter presenter, JPanel panel) {
         JToolBar toolBar = new JToolBar();
         JButton button = new JButton();
         button.setText("Refresh");
-        button.addActionListener(actionEvent -> {
-            refresh(project, tableModel, items);
-        });
+        button.addActionListener(__ -> presenter.refreshPropertiesData(project));
         toolBar.add(button);
         toolBar.setFloatable(false);
         panel.add(toolBar);
-
-        panel.add(tableContainer);
-
-        try {
-            String txt = read(this.getClass().getResourceAsStream("android_gradle_plugin_reference.html"));
-            JTextPane label = new JTextPane();
-            label.setContentType("text/html");
-            label.setText("<html>"+ txt +"</html>");
-            JScrollPane htmlContainer = new JBScrollPane(label){
-                @Override
-                public Dimension getPreferredSize() {
-                    return new Dimension(panel.getWidth(), (int) (panel.getHeight()/2.5));
-                }
-            };
-            htmlContainer.setLayout(new ScrollPaneLayout());
-            htmlContainer.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-            panel.add(htmlContainer);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(panel, "", false);
-
-
-        toolWindow.getContentManager().addContent(content);
-
-
-        refresh(project, tableModel, items);
-
-
     }
 
-    public static String read(InputStream input) throws IOException {
-        try (BufferedReader buffer = new BufferedReader(new InputStreamReader(input))) {
-            return buffer.lines().collect(Collectors.joining("\n"));
-        }
-    }
-
-    private void openValidFile(@NotNull Project project, JBTable table, ValidFile item) {
-        VirtualFile fileByIoFile = LocalFileSystem.getInstance().findFileByIoFile(item.file);
-        runInTableThread(table, () -> FileEditorManager.getInstance(project).openFile(fileByIoFile, true, true));
-    }
-
-    private void runInTableThread(JBTable table, Runnable runnable) {
-        ApplicationManager.getApplication().invokeLater(runnable, ModalityState.stateForComponent(table));
-    }
-
-    private void refresh(@NotNull Project project, DefaultTableModel tableModel, List<Object> items) {
-        getValidFilesObservable(project)
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.newThread())
-                .doOnNext(f -> {
-                    items.add(f);
-                    tableModel.addRow(new Object[]{f.getRelativePath()});
-                })
-                .flatMap(this::getItemsObservable)
-                .doOnNext(item -> {
-                    items.add(item);
-                    tableModel.addRow(new Object[]{"", item.name, item.value});
-                    tableModel.fireTableDataChanged();
-                }).doOnSubscribe(disposable -> {
-            items.clear();
-            clearTable(tableModel);
-        })
-                .subscribe();
-    }
-
-    private void clearTable(DefaultTableModel tableModel) {
-        while (tableModel.getRowCount() > 0) {
-            tableModel.removeRow(0);
-        }
-        tableModel.fireTableDataChanged();
-    }
-
-    private Observable<Item> getItemsObservable(ValidFile f) {
-        return Observable.create(emitter -> {
-            searchProperties(emitter, f);
-            emitter.onComplete();
-        });
-    }
-
-    private Observable<ValidFile> getValidFilesObservable(@NotNull Project project) {
-        return Observable.create((ObservableEmitter<ValidFile> emitter) -> {
-            try {
-                Module[] modules = ModuleManager.getInstance(project).getModules();
-                VirtualFile file = ModuleRootManager.getInstance(modules[0]).getContentRoots()[0];
-                List<VirtualFile> allExcludedRoots = new ArrayList<>();
-                for (Module module : modules) {
-                    VirtualFile[] excludedRoots = ModuleRootManager.getInstance(module).getExcludeRoots();
-                    allExcludedRoots.addAll(Arrays.asList(excludedRoots));
-                }
-                String projectRootFolder = file.getCanonicalPath();
-                File file1 = new File(projectRootFolder);
-                searchFiles(emitter, file1, projectRootFolder, allExcludedRoots);
-            } finally {
-                emitter.onComplete();
-            }
-        });
-    }
-
-    private void searchProperties(Emitter<Item> emitter, ValidFile file) {
-        Properties props = new Properties();
-        try {
-            props.load(new FileInputStream(file.file));
-            Enumeration<?> propertyNames = props.propertyNames();
-            Map<String, Item> map = new TreeMap<>();
-            while (propertyNames.hasMoreElements()) {
-                String key = propertyNames.nextElement().toString();
-                Item item = new Item(key, props.getProperty(key), file.file.toString().substring(file.projectRootFolder.length()));
-                map.put(key, item);
-            }
-            for (Item item : map.values()) {
-                emitter.onNext(item);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            emitter.onComplete();
-        }
-    }
-
-    private void searchFiles(ObservableEmitter<ValidFile> emitter, File folder, String projectRootFolder, List<VirtualFile> excludedRoots) {
-        File[] files = folder.listFiles();
-        if (files != null) {
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    VirtualFile fVirtual = LocalFileSystem.getInstance().findFileByIoFile(f);
-                    boolean isExcluded = false;
-                    for (VirtualFile excluded : excludedRoots) {
-                        if (excluded.equals(fVirtual)) {
-                            isExcluded = true;
-                            break;
+    private void listenForQuickReferenceLoaded(PropertiesPresenter presenter, JPanel panel) {
+        presenter.getPresenterEvents()
+                .ofType(QuickReferenceLoadedPresenterEvent.class)
+                .subscribe(ev -> {
+                    JTextPane label = new JTextPane();
+                    label.setContentType("text/html");
+                    label.setText(ev.html);
+                    JScrollPane htmlContainer = new JBScrollPane(label) {
+                        @Override
+                        public Dimension getPreferredSize() {
+                            return new Dimension(panel.getWidth(), (int) (panel.getHeight() / 2.5));
                         }
-                    }
-                    if (!isExcluded) {
-                        searchFiles(emitter, f, projectRootFolder, excludedRoots);
-                    }
-                } else if (f.toString().endsWith(".properties") || f.getName().equals("settings.gradle")) {
-                    emitter.onNext(new ValidFile(f, projectRootFolder));
-                }
-            }
-        }
+                    };
+                    htmlContainer.setLayout(new ScrollPaneLayout());
+                    htmlContainer.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                    panel.add(htmlContainer);
+                });
     }
 
-
-    private static class PropsTableModel extends DefaultTableModel {
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            return false;
-//                if (col == 0) return false;
-//                return super.isCellEditable(row, col);
-        }
-    }
 }
