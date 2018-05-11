@@ -85,8 +85,8 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
                 clicks.onNext(evt);
             }
         });
-        clicks
-                .throttleLast(250, TimeUnit.MILLISECONDS)
+        RxUtils.doubleClick(clicks)
+             //   .throttleLast(250, TimeUnit.MILLISECONDS)
                 .subscribe(evt -> {
                     int row = table.rowAtPoint(evt.getPoint());
                     int col = table.columnAtPoint(evt.getPoint());
