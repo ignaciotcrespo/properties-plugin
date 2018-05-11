@@ -1,16 +1,26 @@
 package com.github.ignaciotcrespo.ags;
 
+import com.intellij.ide.BrowserUtil;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.newvfs.BulkFileListener;
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.table.JBTable;
+import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import java.awt.*;
+import java.net.URL;
+import java.util.List;
 
 public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
@@ -18,6 +28,8 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
 
         PropertiesPresenter presenter = new PropertiesPresenter();
+
+        listenForFileChanges(project, presenter);
 
         JPanel panel = createPanel();
 
@@ -30,6 +42,16 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
         listenForQuickReferenceLoaded(presenter, panel);
         presenter.refreshHtmlQuickReference();
+    }
+
+    private void listenForFileChanges(@NotNull Project project, PropertiesPresenter presenter) {
+        MessageBusConnection bus = project.getMessageBus().connect();
+        bus.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener(){
+            @Override
+            public void after(@NotNull List<? extends VFileEvent> events) {
+                presenter.onVFileModified(events, project);
+            }
+        });
     }
 
     @NotNull
@@ -66,21 +88,32 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
     }
 
     private void createRefreshButton(@NotNull Project project, PropertiesPresenter presenter, JPanel panel) {
-        JToolBar toolBar = new JToolBar();
+//        JToolBar toolBar = new JToolBar();
         JButton button = new JButton();
         button.setText("Refresh");
+        button.setAlignmentX(JButton.CENTER_ALIGNMENT);
         button.addActionListener(__ -> presenter.refreshPropertiesData(project));
-        toolBar.add(button);
-        toolBar.setFloatable(false);
-        panel.add(toolBar);
+//        toolBar.add(button);
+//        toolBar.setFloatable(false);
+        panel.add(button);
     }
 
     private void listenForQuickReferenceLoaded(PropertiesPresenter presenter, JPanel panel) {
         presenter.getPresenterEvents()
                 .ofType(QuickReferenceLoadedPresenterEvent.class)
                 .subscribe(ev -> {
-                    JTextPane label = new JTextPane();
+                    JEditorPane label = new JEditorPane();
                     label.setContentType("text/html");
+                    label.setEditable(false);
+                    label.setEnabled(true);
+                    label.addHyperlinkListener(hyperlinkEvent -> {
+                        if(hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                            URL url = hyperlinkEvent.getURL();
+                            if(url != null) {
+                                BrowserUtil.browse(url);
+                            }
+                        }
+                    });
                     label.setText(ev.html);
                     JScrollPane htmlContainer = new JBScrollPane(label) {
                         @Override
@@ -90,6 +123,11 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
                     };
                     htmlContainer.setLayout(new ScrollPaneLayout());
                     htmlContainer.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+                    JSeparator seperator = new JSeparator(SwingConstants.HORIZONTAL);
+                    seperator.setMaximumSize( new Dimension(Integer.MAX_VALUE, 2) );
+                    panel.add(seperator);
+
                     panel.add(htmlContainer);
                 });
     }

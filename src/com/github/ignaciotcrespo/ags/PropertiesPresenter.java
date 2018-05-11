@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import io.reactivex.Emitter;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
@@ -23,11 +24,11 @@ import java.util.stream.Collectors;
 import static com.github.ignaciotcrespo.ags.RxUtils.avoidFastClicks;
 import static com.github.ignaciotcrespo.ags.RxUtils.doubleClick;
 
-public class PropertiesPresenter {
+class PropertiesPresenter {
 
-    PublishSubject<UiEvent> uiEvents = PublishSubject.create();
-    PublishSubject<PresenterEvent> presenterEvents = PublishSubject.create();
-    PropsTableModel tableModel = new PropsTableModel();
+    private PublishSubject<UiEvent> uiEvents = PublishSubject.create();
+    private PublishSubject<PresenterEvent> presenterEvents = PublishSubject.create();
+    private PropsTableModel tableModel = new PropsTableModel();
 
     PropertiesPresenter() {
         tableModel.setColumnIdentifiers(new Object[]{"File", "Name", "Value"});
@@ -53,6 +54,24 @@ public class PropertiesPresenter {
                 .observeOn(Schedulers.io())
                 .ofType(RefreshQuickReferenceUiEvent.class)
                 .subscribe(this::refreshQuickReference);
+
+        uiEvents
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .ofType(CheckChangedFiles.class)
+                .subscribe(this::checkChangedFiles);
+    }
+
+    private void checkChangedFiles(CheckChangedFiles checkChangedFiles) {
+        for (VFileEvent ev : checkChangedFiles.events) {
+            VirtualFile file = ev.getFile();
+            if (file != null) {
+                if ((file.getName().endsWith(".properties") || file.getName().equals("settings.gradle"))) {
+                    refreshPropertiesData(checkChangedFiles.project);
+                    break;
+                }
+            }
+        }
     }
 
     private void refreshQuickReference(RefreshQuickReferenceUiEvent __) {
@@ -66,7 +85,7 @@ public class PropertiesPresenter {
         }
     }
 
-    public static String read(InputStream input) throws IOException {
+    private static String read(InputStream input) throws IOException {
         try (BufferedReader buffer = new BufferedReader(new InputStreamReader(input))) {
             return buffer.lines().collect(Collectors.joining("\n"));
         }
@@ -88,7 +107,7 @@ public class PropertiesPresenter {
         }
     }
 
-    public void refreshPropertiesData(Project project) {
+    void refreshPropertiesData(Project project) {
         uiEvents.onNext(new RefreshUiEvent(project));
     }
 
@@ -114,8 +133,10 @@ public class PropertiesPresenter {
                     allExcludedRoots.addAll(Arrays.asList(excludedRoots));
                 }
                 String projectRootFolder = file.getCanonicalPath();
-                File file1 = new File(projectRootFolder);
-                searchFiles(emitter, file1, projectRootFolder, allExcludedRoots);
+                if (projectRootFolder != null) {
+                    File file1 = new File(projectRootFolder);
+                    searchFiles(emitter, file1, projectRootFolder, allExcludedRoots);
+                }
             } finally {
                 emitter.onComplete();
             }
@@ -183,7 +204,7 @@ public class PropertiesPresenter {
 
     private void openValidFile(@NotNull Project project, ValidFile item) {
         VirtualFile fileByIoFile = LocalFileSystem.getInstance().findFileByIoFile(item.file);
-        if(fileByIoFile != null) {
+        if (fileByIoFile != null) {
             runInUiThread(() -> FileEditorManager.getInstance(project).openFile(fileByIoFile, true, true));
         }
     }
@@ -199,4 +220,19 @@ public class PropertiesPresenter {
     Observable<PresenterEvent> getPresenterEvents() {
         return presenterEvents;
     }
+
+    void onVFileModified(List<? extends VFileEvent> events, Project project) {
+        boolean refreshed = false;
+        for (VFileEvent ev : events) {
+            if (tableModel.containsFile(ev.getFile())) {
+                refreshPropertiesData(project);
+                refreshed = true;
+                break;
+            }
+        }
+        if (!refreshed) {
+            uiEvents.onNext(new CheckChangedFiles(events, project));
+        }
+    }
+
 }

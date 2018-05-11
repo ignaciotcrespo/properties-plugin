@@ -1,4 +1,4 @@
-<h2>Quick reference for android</h2>
+<h2>Quick reference for android, properties to add in /gradle.properties</h2>
 
 <p>Source Google IO 2018: <a href="https://youtu.be/N5xONyp69eU?t=9m">https://youtu.be/N5xONyp69eU?t=9m</a>
 </p>
@@ -154,28 +154,28 @@
     <dl>
         <dt><code>org.gradle.caching=(true,false)</code></dt>
         <dd><p>When set to true, Gradle will reuse task outputs from any previous build, when possible, resulting is
-            much faster builds. Learn more about <a href="build_cache.html">using the build cache</a>.</p>
+            much faster builds. Learn more about <a href="https://docs.gradle.org/current/userguide/build_cache.html">using the build cache</a>.</p>
             <br>
         </dd>
         <dt><code>org.gradle.caching.debug=(true,false)</code></dt>
         <dd><p>When set to true, individual input property hashes and the build cache key for each task are logged on
-            the console. Learn more about <a href="build_cache.html#sec:task_output_caching">task output
+            the console. Learn more about <a href="https://docs.gradle.org/current/userguide/build_cache.html#sec:task_output_caching">task output
                 caching</a>.</p>
             <br>
         </dd>
         <dt><code>org.gradle.configureondemand=(true,false)</code></dt>
-        <dd><p>Enables incubating <a href="multi_project_builds.html#sec:configuration_on_demand">configuration
+        <dd><p>Enables incubating <a href="https://docs.gradle.org/current/userguide/multi_project_builds.html#sec:configuration_on_demand">configuration
             on demand</a>, where Gradle will attempt to configure only necessary projects.</p>
             <br>
         </dd>
         <dt><code>org.gradle.console=(auto,plain,rich,verbose)</code></dt>
         <dd><p>Customize console output coloring or verbosity. Default depends on how Gradle is invoked. See <a
-                href="command_line_interface.html#sec:command_line_logging">command-line logging</a> for
+                href="https://docs.gradle.org/current/userguide/command_line_interface.html#sec:command_line_logging">command-line logging</a> for
             additional details.</p>
             <br>
         </dd>
         <dt><code>org.gradle.daemon=(true,false)</code></dt>
-        <dd><p>When set to <code>true</code> the <a href="gradle_daemon.html">Gradle
+        <dd><p>When set to <code>true</code> the <a href="https://docs.gradle.org/current/userguide/gradle_daemon.html">Gradle
             Daemon</a> is used to run the build. Default is <code>true</code>.</p>
             <br>
         </dd>
@@ -199,7 +199,7 @@
         </dd>
         <dt><code>org.gradle.jvmargs=(JVM arguments)</code></dt>
         <dd><p>Specifies the JVM arguments used for the Gradle Daemon. The setting is particularly useful for <a
-                href="build_environment.html#sec:configuring_jvm_memory">configuring JVM memory
+                href="https://docs.gradle.org/current/userguide/build_environment.html#sec:configuring_jvm_memory">configuring JVM memory
             settings</a> for build performance.</p>
             <br>
         </dd>
@@ -207,31 +207,31 @@
         >org.gradle.logging.level=(quiet,warn,lifecycle,info,debug)</code></dt>
         <dd><p>When set to quiet, warn, lifecycle, info, or debug, Gradle will use this log level. The values are not
             case sensitive. The <code>lifecycle</code> level is the default. See
-            <a class="xref"
-               href="logging.html#sec:choosing_a_log_level">the
+            <a
+               href="https://docs.gradle.org/current/userguide/logging.html#sec:choosing_a_log_level">the
                 section called "Choosing a log level"</a>.</p>
             <br>
         </dd>
         <dt><code>org.gradle.parallel=(true,false)</code></dt>
         <dd><p>When configured, Gradle will fork up to <code>org.gradle.workers.max</code> JVMs to
             execute projects in parallel. To learn more about parallel task execution, see
-            <a class="ulink"
+            <a
                href="https://guides.gradle.org/performance/#parallel_execution"
-               target="_top">the Gradle
+               >the Gradle
                 performance guide</a>.</p>
             <br>
         </dd>
         <dt><code>org.gradle.warning.mode=(all,none,summary)</code></dt>
         <dd><p>When set to <code>all</code>, <code>summary</code> or <code
         >none</code>, Gradle will use different warning type display. See
-            <a class="xref"
-               href="command_line_interface.html#sec:command_line_logging">the
+            <a
+               href="https://docs.gradle.org/current/userguide/command_line_interface.html#sec:command_line_logging">the
                 section called "Logging options"</a> for details.</p>
             <br>
         </dd>
         <dt><code>org.gradle.workers.max=(max # of worker processes)</code></dt>
         <dd><p>When configured, Gradle will use a maximum of the given number of workers. Default is number of CPU
-            processors. See also <a href="command_line_interface.html#sec:command_line_performance">performance
+            processors. See also <a href="https://docs.gradle.org/current/userguide/command_line_interface.html#sec:command_line_performance">performance
                 command-line options</a>.</p></dd>
     </dl>
 </div>
