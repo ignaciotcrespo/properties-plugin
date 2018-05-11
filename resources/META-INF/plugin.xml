@@ -1,15 +1,16 @@
 <idea-plugin>
   <id>ignaciotcrespo.github.com.android-gradle-switches</id>
-  <name>Gradle Switches and properties</name>
-  <version>0.0.5</version>
+  <name>Properties</name>
+  <version>1.0.0</version>
   <vendor email="itcrespo@gmail.com" url="https://github.com/ignaciotcrespo">Ignacio Tomas Crespo</vendor>
 
   <description><![CDATA[
-    Display all properties and settings.gradle.
+    <p>Display all properties in the entire project, searching in ".properties" files and "settings.gradle" file.</p>
+    <p>Show also a quick reference of properties useful for android builds</p>
     ]]></description>
 
   <change-notes><![CDATA[
-      First alpha version.
+      First version.
     ]]>
   </change-notes>
 
@@ -24,7 +25,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <toolWindow id="Android Gradle Switches" anchor="right" factoryClass="com.github.ignaciotcrespo.ags.GradleSwitchesToolWindowFactory"/>
+    <toolWindow id="Properties!" anchor="right" factoryClass="com.github.ignaciotcrespo.ags.GradleSwitchesToolWindowFactory"/>
   </extensions>
 
   <actions>

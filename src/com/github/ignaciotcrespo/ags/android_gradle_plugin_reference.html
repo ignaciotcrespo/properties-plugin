@@ -1,0 +1,113 @@
+<h2>Quick reference for android</h2>
+<p>Source: <a href="https://developer.android.com/studio/releases/gradle-plugin">https://developer.android.com/studio/releases/gradle-plugin</a></p>
+
+<br/>
+<hr/>
+<br/>
+
+<p>By default, Android Studio now uses a new DEX
+    compiler called D8. DEX compilation is the process of transforming <code>.class</code>
+    bytecode into <code>.dex</code> bytecode for the Android Runtime (or Dalvik, for older
+    versions of Android). Compared to the previous compiler, called DX, D8
+    compiles faster and outputs smaller DEX files, all while having the same or
+    better app runtime performance.</p>
+<p>D8 shouldn't change your day-to-day app development workflow. However, if you
+    experience any issues related to the new compiler, please
+    <a href="https://developer.android.com/studio/report-bugs.html">report a bug</a>. You can temporarily disable D8 and
+    use DX by including the following in your project's <code>gradle.properties</code> file:</p>
+<p><code>enableD8 = false</code></p>
+
+<br/>
+<hr/>
+<br/>
+
+<p>For projects that
+    <a href="https://developer.android.com/studio/write/java8-support.html">use Java 8 language features</a>,
+    incremental desugaring is enabled by default. You can disable it by
+    specifying the following in your project's <code>gradle.properties</code> file:</p>
+<p><code>enableIncrementalDesugaring = false</code></p>
+
+<br/>
+<hr/>
+<br/>
+
+<p>Improved incremental resource processing using AAPT2, which is now enabled by
+    default.
+    If you are experiencing issues while using AAPT2, please
+    <a href="https://developer.android.com/studio/report-bugs.html">report a bug</a>. You can also disable AAPT2 by
+    setting <code>android.enableAapt2=false</code> in your <code>gradle.properties</code> file and
+    restarting the Gradle daemon by running <code>./gradlew --stop</code> from the command
+    line.</p>
+
+<br/>
+<hr/>
+<br/>
+
+<p>Improves build performance by adopting a new default packaging
+    pipeline which handles zipping, signing, and <a href="https://developer.android.com/studio/command-line/zipalign.html">zipaligning</a> in one task. You
+    can revert to using the older packaging tools by adding
+    <code>android.useOldPackaging=true</code> to your
+    <code>gradle.properties</code> file. While using the new packaging
+    tool, the <code>zipalignDebug</code> task is not available. However,
+    you can create one yourself by calling the
+    <code>createZipAlignTask(String taskName, File inputFile, File
+        outputFile)</code> method.
+</p>
+
+<br/>
+<hr/>
+<br/>
+
+<p>By default, if the Gradle daemon's heap size is at least 1.5
+    GB, Jack now runs in the same process as Gradle. To adjust the
+    daemon heap size, add the following to your
+    <code>gradle.properties</code> file:
+</p>
+<p><code>org.gradle.jvmargs=-Xmx1536M</code></p>
+
+<br/>
+<hr/>
+<br/>
+
+<p>
+    Added support for dexing-in-process which performs dexing within the build
+    process rather than in a separate, external VM processes. This not only makes
+    incremental builds faster, but also speeds up full builds. The feature is
+    enabled by default for projects that have set the Gradle daemon's maximum heap
+    size to at least 2048 MB. You can do this by including the following in your
+    project's <code>gradle.properties</code> file:
+
+</p>
+
+<p><code>org.gradle.jvmargs=-Xmx2048m</code></p>
+
+
+<br/>
+<hr/>
+<br/>
+
+<p>
+    If you have defined a value for <a class="external-link" href="http://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.DexOptions.html#com.android.build.gradle.internal.dsl.DexOptions:javaMaxHeapSize">
+    <code>javaMaxHeapSize</code></a> in your module-level <code>build.gradle</code>
+    file, you need to set <code>org.gradle.jvmargs</code> to the value of
+    <code>javaMaxHeapSize</code> + 1024 MB. For example, if you have set
+    <code>javaMaxHeapSize</code> to "2048m", you need to add the following to your
+    project's <code>gradle.properties</code> file:
+
+</p>
+
+<p><code>org.gradle.jvmargs=-Xmx3072m</code></p>
+
+<br/>
+<hr/>
+<br/>
+
+<p>Added support for the <code>com.android.build.threadPoolSize</code> property to control
+    the <code>Android</code> task thread pool size from the <code>gradle.properties</code> file
+    or the command line. The following example sets this property to 4.
+</p>
+<p><code>com.android.build.threadPoolSize = 4</code></p>
+
+<br/>
+<br/>
+<br/>

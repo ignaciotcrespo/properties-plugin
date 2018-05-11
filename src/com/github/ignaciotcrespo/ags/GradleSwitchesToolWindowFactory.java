@@ -25,13 +25,14 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
@@ -90,7 +91,6 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
                     int row = table.rowAtPoint(evt.getPoint());
                     int col = table.columnAtPoint(evt.getPoint());
                     if (row >= 0 && col >= 0) {
-//                    Object value = table.getModel().getValueAt(row, col);
                         Object item = items.get(row);
                         if (item instanceof ValidFile) {
                             openValidFile(project, table, (ValidFile) item);
@@ -112,7 +112,7 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
         tableContainer.setLayout(new ScrollPaneLayout());
 
         JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
         JToolBar toolBar = new JToolBar();
         JButton button = new JButton();
         button.setText("Refresh");
@@ -121,9 +121,28 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
         });
         toolBar.add(button);
         toolBar.setFloatable(false);
-        panel.add(toolBar, BorderLayout.NORTH);
+        panel.add(toolBar);
 
-        panel.add(tableContainer, BorderLayout.CENTER);
+        panel.add(tableContainer);
+
+        try {
+            String txt = read(this.getClass().getResourceAsStream("android_gradle_plugin_reference.html"));
+            JTextPane label = new JTextPane();
+            label.setContentType("text/html");
+            label.setText("<html>"+ txt +"</html>");
+            JScrollPane htmlContainer = new JBScrollPane(label){
+                @Override
+                public Dimension getPreferredSize() {
+                    return new Dimension(panel.getWidth(), (int) (panel.getHeight()/2.5));
+                }
+            };
+            htmlContainer.setLayout(new ScrollPaneLayout());
+            htmlContainer.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            panel.add(htmlContainer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
 
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(panel, "", false);
@@ -137,16 +156,25 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
     }
 
+    public static String read(InputStream input) throws IOException {
+        try (BufferedReader buffer = new BufferedReader(new InputStreamReader(input))) {
+            return buffer.lines().collect(Collectors.joining("\n"));
+        }
+    }
+
     private void openValidFile(@NotNull Project project, JBTable table, ValidFile item) {
         VirtualFile fileByIoFile = LocalFileSystem.getInstance().findFileByIoFile(item.file);
-        ApplicationManager.getApplication().invokeLater(() -> {
-            FileEditorManager.getInstance(project).openFile(fileByIoFile, true, true);
-        }, ModalityState.stateForComponent(table));
+        runInTableThread(table, () -> FileEditorManager.getInstance(project).openFile(fileByIoFile, true, true));
+    }
+
+    private void runInTableThread(JBTable table, Runnable runnable) {
+        ApplicationManager.getApplication().invokeLater(runnable, ModalityState.stateForComponent(table));
     }
 
     private void refresh(@NotNull Project project, DefaultTableModel tableModel, List<Object> items) {
         getValidFilesObservable(project)
                 .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.newThread())
                 .doOnNext(f -> {
                     items.add(f);
                     tableModel.addRow(new Object[]{f.getRelativePath()});
