@@ -126,16 +126,18 @@ class PropertiesPresenter {
         return Observable.create((ObservableEmitter<ValidFile> emitter) -> {
             try {
                 Module[] modules = ModuleManager.getInstance(project).getModules();
-                VirtualFile file = ModuleRootManager.getInstance(modules[0]).getContentRoots()[0];
-                List<VirtualFile> allExcludedRoots = new ArrayList<>();
-                for (Module module : modules) {
-                    VirtualFile[] excludedRoots = ModuleRootManager.getInstance(module).getExcludeRoots();
-                    allExcludedRoots.addAll(Arrays.asList(excludedRoots));
-                }
-                String projectRootFolder = file.getCanonicalPath();
-                if (projectRootFolder != null) {
-                    File file1 = new File(projectRootFolder);
-                    searchFiles(emitter, file1, projectRootFolder, allExcludedRoots);
+                if (modules.length > 0) {
+                    VirtualFile file = modules[0].getProject().getBaseDir();
+                    List<VirtualFile> allExcludedRoots = new ArrayList<>();
+                    for (Module module : modules) {
+                        VirtualFile[] excludedRoots = ModuleRootManager.getInstance(module).getExcludeRoots();
+                        allExcludedRoots.addAll(Arrays.asList(excludedRoots));
+                    }
+                    String projectRootFolder = file.getCanonicalPath();
+                    if (projectRootFolder != null) {
+                        File file1 = new File(projectRootFolder);
+                        searchFiles(emitter, file1, projectRootFolder, allExcludedRoots);
+                    }
                 }
             } finally {
                 emitter.onComplete();
