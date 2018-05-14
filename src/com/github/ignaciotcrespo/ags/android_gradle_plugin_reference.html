@@ -5,14 +5,13 @@
 <div>
     <dl>
         <dt><code>android.useAndroidX = true | false</code></dt>
-        <dd><p>Force the compiler to generate code based in androidx (for databinding, multidex, etc.). Generated code
-            use support libraries, use this
-            flag if you migrated your code to androidx so the generated code also do it</p>
+        <dd><p>Force the compiler to use androidx in generated code (for databinding, multidex, etc.). Generated code
+            use support libraries, use this flag if you migrated your code to androidx</p>
             <br>
         </dd>
 
         <dt><code>android.enableJetifier = true | false</code></dt>
-        <dd><p>converts external libraries using old support libs to androidX</p>
+        <dd><p>converts external libraries using old support libs to androidx, use this flag if you migrated your code to androidx</p>
             <br>
         </dd>
 
