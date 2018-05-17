@@ -150,6 +150,18 @@ class PropertiesPresenter {
         if (files != null) {
             for (File f : files) {
                 if (f.isDirectory()) {
+                    if(".gradle".equals(f.getName())){
+                        continue;
+                    }
+                    if(".idea".equals(f.getName())){
+                        continue;
+                    }
+                    if(f.getAbsolutePath().contains("build") && f.getAbsolutePath().contains("generated")){
+                        continue;
+                    }
+                    if(f.getAbsolutePath().contains("build") && f.getAbsolutePath().contains("intermediates")){
+                        continue;
+                    }
                     VirtualFile fVirtual = LocalFileSystem.getInstance().findFileByIoFile(f);
                     boolean isExcluded = false;
                     for (VirtualFile excluded : excludedRoots) {
