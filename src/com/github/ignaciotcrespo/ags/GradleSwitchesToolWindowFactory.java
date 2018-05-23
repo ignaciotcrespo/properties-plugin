@@ -76,7 +76,7 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 int row = table.rowAtPoint(evt.getPoint());
-                if(row >=0) {
+                if (row >= 0) {
                     presenter.itemClicked(row, project);
                 }
             }
@@ -107,9 +107,9 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
                     label.setEditable(false);
                     label.setEnabled(true);
                     label.addHyperlinkListener(hyperlinkEvent -> {
-                        if(hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                        if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                             URL url = hyperlinkEvent.getURL();
-                            if(url != null) {
+                            if (url != null) {
                                 BrowserUtil.browse(url);
                             }
                         }
@@ -124,11 +124,12 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
                     htmlContainer.setLayout(new ScrollPaneLayout());
                     htmlContainer.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-                    JSeparator seperator = new JSeparator(SwingConstants.HORIZONTAL);
-                    seperator.setMaximumSize( new Dimension(Integer.MAX_VALUE, 2) );
-                    panel.add(seperator);
-
-                    panel.add(htmlContainer);
+                    JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+                    separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+                    Utils.runInUiThread(() -> {
+                        panel.add(separator);
+                        panel.add(htmlContainer);
+                    });
                 });
     }
 

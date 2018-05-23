@@ -1,7 +1,5 @@
 package com.github.ignaciotcrespo.ags;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -117,9 +115,9 @@ class PropertiesPresenter {
                 .delay(1, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.newThread())
-                .doOnNext(tableModel::addItem)
+                .doOnNext(item -> Utils.runInUiThread(() -> tableModel.addItem(item)))
                 .flatMap(this::getItemsObservable)
-                .doOnNext(tableModel::addItem)
+                .doOnNext(item -> Utils.runInUiThread(() -> tableModel.addItem(item)))
                 .doOnSubscribe(disposable -> tableModel.clear())
                 .subscribe();
     }
@@ -221,12 +219,8 @@ class PropertiesPresenter {
     private void openValidFile(@NotNull Project project, ValidFile item) {
         VirtualFile fileByIoFile = LocalFileSystem.getInstance().findFileByIoFile(item.file);
         if (fileByIoFile != null) {
-            runInUiThread(() -> FileEditorManager.getInstance(project).openFile(fileByIoFile, true, true));
+            Utils.runInUiThread(() -> FileEditorManager.getInstance(project).openFile(fileByIoFile, true, true));
         }
-    }
-
-    private void runInUiThread(Runnable runnable) {
-        ApplicationManager.getApplication().invokeLater(runnable, ModalityState.defaultModalityState());
     }
 
     void refreshHtmlQuickReference() {
