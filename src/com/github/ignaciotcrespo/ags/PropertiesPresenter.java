@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.github.ignaciotcrespo.ags.RxUtils.avoidFastClicks;
@@ -113,6 +114,7 @@ class PropertiesPresenter {
 
     private void refresh(@NotNull Project project, PropsTableModel tableModel) {
         getValidFilesObservable(project)
+                .delay(1, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.newThread())
                 .doOnNext(tableModel::addItem)

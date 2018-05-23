@@ -24,6 +24,7 @@ class PropsTableModel extends DefaultTableModel {
         if(item instanceof ValidFile){
             validFiles.add((ValidFile) item);
             addRow(new Object[]{((ValidFile) item).getRelativePath()});
+            fireTableDataChanged();
         } else if (item instanceof Item) {
             Item it = (Item) item;
             addRow(new Object[]{"", it.name, it.value});

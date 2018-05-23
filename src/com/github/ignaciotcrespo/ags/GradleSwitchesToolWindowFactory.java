@@ -45,13 +45,13 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
     }
 
     private void listenForFileChanges(@NotNull Project project, PropertiesPresenter presenter) {
-        MessageBusConnection bus = project.getMessageBus().connect();
-        bus.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener(){
-            @Override
-            public void after(@NotNull List<? extends VFileEvent> events) {
-                presenter.onVFileModified(events, project);
-            }
-        });
+//        MessageBusConnection bus = project.getMessageBus().connect();
+//        bus.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener(){
+//            @Override
+//            public void after(@NotNull List<? extends VFileEvent> events) {
+//                presenter.onVFileModified(events, project);
+//            }
+//        });
     }
 
     @NotNull
