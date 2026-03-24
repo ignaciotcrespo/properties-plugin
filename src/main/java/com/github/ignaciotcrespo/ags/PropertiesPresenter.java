@@ -70,13 +70,18 @@ class PropertiesPresenter {
         Object item = tableModel.getItem(row);
         if (item instanceof ValidFile) {
             openValidFile(ui.project, (ValidFile) item);
-        } else {
-            while (--row >= 0) {
-                item = tableModel.getItem(row);
-                if (item instanceof ValidFile) {
-                    openValidFile(ui.project, (ValidFile) item);
-                    break;
-                }
+        } else if (item instanceof Item) {
+            openItemFile(ui.project, (Item) item);
+        }
+    }
+
+    private void openItemFile(@NotNull Project project, Item item) {
+        String basePath = project.getBasePath();
+        if (basePath != null) {
+            File file = new File(basePath + item.path);
+            VirtualFile vf = LocalFileSystem.getInstance().findFileByIoFile(file);
+            if (vf != null) {
+                Utils.runInUiThread(() -> FileEditorManager.getInstance(project).openFile(vf, true, true));
             }
         }
     }

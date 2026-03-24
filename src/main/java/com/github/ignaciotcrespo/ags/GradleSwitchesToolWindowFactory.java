@@ -60,10 +60,19 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
     }
 
     private void createTable(@NotNull Project project, PropertiesPresenter presenter, JPanel panel) {
-        //JTable table = new TreeTable(new ListTreeTableModel());
         JBTable table = new JBTable();
         table.setExpandableItemsEnabled(true);
         table.setModel(presenter.getTableModel());
+        table.setAutoCreateRowSorter(false);
+        table.getTableHeader().addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int col = table.columnAtPoint(evt.getPoint());
+                if (col >= 0) {
+                    presenter.getTableModel().sortBy(col);
+                }
+            }
+        });
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
