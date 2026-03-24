@@ -18,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.github.ignaciotcrespo.ags.RxUtils.avoidFastClicks;
 import static com.github.ignaciotcrespo.ags.RxUtils.doubleClick;
@@ -26,7 +25,6 @@ import static com.github.ignaciotcrespo.ags.RxUtils.doubleClick;
 class PropertiesPresenter {
 
     private PublishSubject<UiEvent> uiEvents = PublishSubject.create();
-    private PublishSubject<PresenterEvent> presenterEvents = PublishSubject.create();
     private PropsTableModel tableModel = new PropsTableModel();
 
     PropertiesPresenter() {
@@ -51,12 +49,6 @@ class PropertiesPresenter {
         uiEvents
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .ofType(RefreshQuickReferenceUiEvent.class)
-                .subscribe(this::refreshQuickReference);
-
-        uiEvents
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
                 .ofType(CheckChangedFiles.class)
                 .subscribe(this::checkChangedFiles);
     }
@@ -70,23 +62,6 @@ class PropertiesPresenter {
                     break;
                 }
             }
-        }
-    }
-
-    private void refreshQuickReference(RefreshQuickReferenceUiEvent __) {
-        try {
-            String txt = read(this.getClass().getResourceAsStream("android_gradle_plugin_reference.html"));
-            if (txt != null && txt.length() > 0) {
-                presenterEvents.onNext(new QuickReferenceLoadedPresenterEvent("<html>" + txt + "</html>"));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static String read(InputStream input) throws IOException {
-        try (BufferedReader buffer = new BufferedReader(new InputStreamReader(input))) {
-            return buffer.lines().collect(Collectors.joining("\n"));
         }
     }
 
@@ -220,13 +195,6 @@ class PropertiesPresenter {
         }
     }
 
-    void refreshHtmlQuickReference() {
-        uiEvents.onNext(new RefreshQuickReferenceUiEvent());
-    }
-
-    Observable<PresenterEvent> getPresenterEvents() {
-        return presenterEvents;
-    }
 
     void onVFileModified(List<? extends VFileEvent> events, Project project) {
         boolean refreshed = false;

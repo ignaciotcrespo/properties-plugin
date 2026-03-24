@@ -1,7 +1,5 @@
 package com.github.ignaciotcrespo.ags;
 
-import com.intellij.ide.BrowserUtil;
-import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -12,9 +10,6 @@ import com.intellij.ui.table.JBTable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
-import java.awt.*;
-import java.net.URL;
 
 public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
@@ -34,8 +29,6 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
         presenter.refreshPropertiesData(project);
 
-        listenForQuickReferenceLoaded(presenter, panel);
-        presenter.refreshHtmlQuickReference();
     }
 
     private void listenForFileChanges(@NotNull Project project, PropertiesPresenter presenter) {
@@ -92,39 +85,5 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
         panel.add(button);
     }
 
-    private void listenForQuickReferenceLoaded(PropertiesPresenter presenter, JPanel panel) {
-        presenter.getPresenterEvents()
-                .ofType(QuickReferenceLoadedPresenterEvent.class)
-                .subscribe(ev -> {
-                    JEditorPane label = new JEditorPane();
-                    label.setContentType("text/html");
-                    label.setEditable(false);
-                    label.setEnabled(true);
-                    label.addHyperlinkListener(hyperlinkEvent -> {
-                        if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                            URL url = hyperlinkEvent.getURL();
-                            if (url != null) {
-                                BrowserUtil.browse(url);
-                            }
-                        }
-                    });
-                    label.setText(ev.html);
-                    JScrollPane htmlContainer = new JBScrollPane(label) {
-                        @Override
-                        public Dimension getPreferredSize() {
-                            return new Dimension(panel.getWidth(), (int) (panel.getHeight() / 2.5));
-                        }
-                    };
-                    htmlContainer.setLayout(new ScrollPaneLayout());
-                    htmlContainer.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-
-                    JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
-                    separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
-                    Utils.runInUiThread(() -> {
-                        panel.add(separator);
-                        panel.add(htmlContainer);
-                    });
-                });
-    }
 
 }
