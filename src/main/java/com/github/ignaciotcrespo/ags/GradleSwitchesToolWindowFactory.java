@@ -22,7 +22,12 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
         JPanel panel = createPanel();
 
-        createRefreshButton(project, presenter, panel);
+        JPanel buttonsPanel = new JPanel();
+        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.LINE_AXIS));
+        createRefreshButton(project, presenter, buttonsPanel);
+        createDuplicatesButton(presenter, buttonsPanel);
+        buttonsPanel.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, buttonsPanel.getPreferredSize().height));
+        panel.add(buttonsPanel);
         createTable(project, presenter, panel);
 
         showContent(toolWindow, panel);
@@ -75,14 +80,21 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
     }
 
     private void createRefreshButton(@NotNull Project project, PropertiesPresenter presenter, JPanel panel) {
-//        JToolBar toolBar = new JToolBar();
-        JButton button = new JButton();
-        button.setText("Refresh");
-        button.setAlignmentX(JButton.CENTER_ALIGNMENT);
+        JButton button = new JButton("Refresh");
         button.addActionListener(__ -> presenter.refreshPropertiesData(project));
-//        toolBar.add(button);
-//        toolBar.setFloatable(false);
         panel.add(button);
+    }
+
+    private void createDuplicatesButton(PropertiesPresenter presenter, JPanel panel) {
+        JCheckBox checkBox = new JCheckBox("Duplicates only");
+        checkBox.addActionListener(__ -> {
+            if (checkBox.isSelected()) {
+                presenter.getTableModel().showDuplicatesOnly();
+            } else {
+                presenter.getTableModel().showAll();
+            }
+        });
+        panel.add(checkBox);
     }
 
 

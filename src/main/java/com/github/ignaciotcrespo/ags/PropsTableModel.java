@@ -3,8 +3,7 @@ package com.github.ignaciotcrespo.ags;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import javax.swing.table.DefaultTableModel;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 class PropsTableModel extends DefaultTableModel {
@@ -52,5 +51,54 @@ class PropsTableModel extends DefaultTableModel {
                 }
         }
         return false;
+    }
+
+    void showDuplicatesOnly() {
+        // Find property keys that appear in more than one file
+        Map<String, Set<String>> keyToFiles = new HashMap<>();
+        for (Object obj : items) {
+            if (obj instanceof Item) {
+                Item it = (Item) obj;
+                keyToFiles.computeIfAbsent(it.name, k -> new HashSet<>()).add(it.path);
+            }
+        }
+        Set<String> duplicateKeys = new HashSet<>();
+        for (Map.Entry<String, Set<String>> entry : keyToFiles.entrySet()) {
+            if (entry.getValue().size() > 1) {
+                duplicateKeys.add(entry.getKey());
+            }
+        }
+
+        rebuildRows(duplicateKeys);
+    }
+
+    void showAll() {
+        rebuildRows(null);
+    }
+
+    private void rebuildRows(Set<String> filterKeys) {
+        while (getRowCount() > 0) {
+            removeRow(0);
+        }
+
+        ValidFile lastFile = null;
+        boolean fileHeaderAdded = false;
+
+        for (Object obj : items) {
+            if (obj instanceof ValidFile) {
+                lastFile = (ValidFile) obj;
+                fileHeaderAdded = false;
+            } else if (obj instanceof Item) {
+                Item it = (Item) obj;
+                if (filterKeys == null || filterKeys.contains(it.name)) {
+                    if (!fileHeaderAdded && lastFile != null) {
+                        addRow(new Object[]{lastFile.getRelativePath()});
+                        fileHeaderAdded = true;
+                    }
+                    addRow(new Object[]{"", it.name, it.value});
+                }
+            }
+        }
+        fireTableDataChanged();
     }
 }
