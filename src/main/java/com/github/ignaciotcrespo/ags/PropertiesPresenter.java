@@ -57,7 +57,7 @@ class PropertiesPresenter {
         for (VFileEvent ev : checkChangedFiles.events) {
             VirtualFile file = ev.getFile();
             if (file != null) {
-                if ((file.getName().endsWith(".properties") || file.getName().equals("settings.gradle"))) {
+                if ((file.getName().endsWith(".properties"))) {
                     refreshPropertiesData(checkChangedFiles.project);
                     break;
                 }
@@ -150,7 +150,7 @@ class PropertiesPresenter {
                     if (!isExcluded) {
                         searchFiles(emitter, f, projectRootFolder, excludedRoots);
                     }
-                } else if (f.toString().endsWith(".properties") || f.getName().equals("settings.gradle")) {
+                } else if (f.toString().endsWith(".properties")) {
                     emitter.onNext(new ValidFile(f, projectRootFolder));
                 }
             }
