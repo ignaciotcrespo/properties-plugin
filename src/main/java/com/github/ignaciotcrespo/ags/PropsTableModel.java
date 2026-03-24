@@ -13,6 +13,7 @@ class PropsTableModel extends DefaultTableModel {
     private List<ValidFile> validFiles = new CopyOnWriteArrayList<>();
 
     private Set<String> filterKeys = null;
+    private String searchText = "";
     private int sortColumn = -1;
     private boolean sortAscending = true;
 
@@ -35,13 +36,13 @@ class PropsTableModel extends DefaultTableModel {
 
     private void appendRow(Object item) {
         if (item instanceof ValidFile) {
-            if (filterKeys != null) return;
+            if (filterKeys != null || !searchText.isEmpty()) return;
             displayItems.add(item);
             addRow(new Object[]{((ValidFile) item).getRelativePath()});
             fireTableDataChanged();
         } else if (item instanceof Item) {
             Item it = (Item) item;
-            if (filterKeys == null || filterKeys.contains(it.name)) {
+            if (matchesItem(it)) {
                 displayItems.add(item);
                 addRow(new Object[]{"", it.name, it.value});
                 fireTableDataChanged();
@@ -99,6 +100,11 @@ class PropsTableModel extends DefaultTableModel {
         rebuildRows();
     }
 
+    void setSearchText(String text) {
+        this.searchText = text == null ? "" : text.trim().toLowerCase();
+        rebuildRows();
+    }
+
     void sortBy(int column) {
         if (sortColumn == column) {
             sortAscending = !sortAscending;
@@ -107,6 +113,16 @@ class PropsTableModel extends DefaultTableModel {
             sortAscending = true;
         }
         rebuildRows();
+    }
+
+    private boolean matchesItem(Item it) {
+        if (filterKeys != null && !filterKeys.contains(it.name)) {
+            return false;
+        }
+        if (!searchText.isEmpty()) {
+            return it.name.toLowerCase().contains(searchText) || it.value.toLowerCase().contains(searchText);
+        }
+        return true;
     }
 
     private void rebuildRows() {
@@ -153,7 +169,7 @@ class PropsTableModel extends DefaultTableModel {
         for (Object obj : items) {
             if (obj instanceof Item) {
                 Item it = (Item) obj;
-                if (filterKeys == null || filterKeys.contains(it.name)) {
+                if (matchesItem(it)) {
                     flatItems.add(it);
                 }
             }
@@ -190,7 +206,7 @@ class PropsTableModel extends DefaultTableModel {
                 currentItems = new ArrayList<>();
             } else if (obj instanceof Item) {
                 Item it = (Item) obj;
-                if (currentItems != null && (filterKeys == null || filterKeys.contains(it.name))) {
+                if (currentItems != null && matchesItem(it)) {
                     currentItems.add(it);
                 }
             }

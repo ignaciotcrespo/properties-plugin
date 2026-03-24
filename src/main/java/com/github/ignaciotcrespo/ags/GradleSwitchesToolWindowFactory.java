@@ -10,6 +10,8 @@ import com.intellij.ui.table.JBTable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
@@ -28,6 +30,7 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
         createDuplicatesButton(presenter, buttonsPanel);
         buttonsPanel.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, buttonsPanel.getPreferredSize().height));
         panel.add(buttonsPanel);
+        createSearchField(presenter, panel);
         createTable(project, presenter, panel);
 
         showContent(toolWindow, panel);
@@ -92,6 +95,36 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
         JButton button = new JButton("Refresh");
         button.addActionListener(__ -> presenter.refreshPropertiesData(project));
         panel.add(button);
+    }
+
+    private void createSearchField(PropertiesPresenter presenter, JPanel panel) {
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.LINE_AXIS));
+
+        JTextField searchField = new JTextField();
+        searchField.setToolTipText("Search by key name or value");
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) { filter(); }
+            @Override
+            public void removeUpdate(DocumentEvent e) { filter(); }
+            @Override
+            public void changedUpdate(DocumentEvent e) { filter(); }
+            private void filter() { presenter.getTableModel().setSearchText(searchField.getText()); }
+        });
+
+        JButton clearButton = new JButton("X");
+        clearButton.setToolTipText("Clear search");
+        clearButton.addActionListener(__ -> {
+            searchField.setText("");
+            presenter.getTableModel().setSearchText("");
+        });
+
+        searchPanel.add(new JLabel(" Search: "));
+        searchPanel.add(searchField);
+        searchPanel.add(clearButton);
+        searchPanel.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, searchPanel.getPreferredSize().height));
+        panel.add(searchPanel);
     }
 
     private void createDuplicatesButton(PropertiesPresenter presenter, JPanel panel) {
