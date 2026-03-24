@@ -37,6 +37,10 @@ The plugin zip will be in `build/distributions/`.
 - IntelliJ IDEA 2023.3+
 - Java 17+
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## Links
 
 - [Repository](https://github.com/ignaciotcrespo/propertiesplugin)
