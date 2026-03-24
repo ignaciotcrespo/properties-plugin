@@ -14,6 +14,8 @@ class PropsTableModel extends DefaultTableModel {
 
     private Set<String> filterKeys = null;
     private String searchText = "";
+    private String focusedFilePath = null;
+    private boolean showAllFiles = false;
     private int sortColumn = -1;
     private boolean sortAscending = true;
 
@@ -36,7 +38,8 @@ class PropsTableModel extends DefaultTableModel {
 
     private void appendRow(Object item) {
         if (item instanceof ValidFile) {
-            if (filterKeys != null || !searchText.isEmpty()) return;
+            ValidFile vf = (ValidFile) item;
+            if (filterKeys != null || !searchText.isEmpty() || !matchesFile(vf.getRelativePath())) return;
             displayItems.add(item);
             addRow(new Object[]{((ValidFile) item).getRelativePath()});
             fireTableDataChanged();
@@ -116,6 +119,22 @@ class PropsTableModel extends DefaultTableModel {
         rebuildRows();
     }
 
+    void setFocusedFile(String path) {
+        this.focusedFilePath = path;
+        if (!showAllFiles) {
+            rebuildRows();
+        }
+    }
+
+    void setShowAllFiles(boolean showAll) {
+        this.showAllFiles = showAll;
+        rebuildRows();
+    }
+
+    String getFocusedFilePath() {
+        return focusedFilePath;
+    }
+
     void sortBy(int column) {
         if (sortColumn == column) {
             sortAscending = !sortAscending;
@@ -126,7 +145,17 @@ class PropsTableModel extends DefaultTableModel {
         rebuildRows();
     }
 
+    private boolean matchesFile(String path) {
+        if (!showAllFiles && focusedFilePath != null) {
+            return path.equals(focusedFilePath);
+        }
+        return true;
+    }
+
     private boolean matchesItem(Item it) {
+        if (!matchesFile(it.path)) {
+            return false;
+        }
         if (filterKeys != null && !filterKeys.contains(it.name)) {
             return false;
         }

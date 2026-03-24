@@ -1,6 +1,10 @@
 package com.github.ignaciotcrespo.ags;
 
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.newvfs.BulkFileListener;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
@@ -32,6 +36,10 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.LINE_AXIS));
         createRefreshButton(project, presenter, buttonsPanel);
         createDuplicatesButton(presenter, buttonsPanel);
+        JCheckBox showAllFilesCheckBox = new JCheckBox("Show all files");
+        showAllFilesCheckBox.setVisible(false);
+        showAllFilesCheckBox.addActionListener(__ -> presenter.getTableModel().setShowAllFiles(showAllFilesCheckBox.isSelected()));
+        buttonsPanel.add(showAllFilesCheckBox);
         buttonsPanel.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, buttonsPanel.getPreferredSize().height));
         panel.add(buttonsPanel);
         createSearchField(presenter, panel);
@@ -39,8 +47,29 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
         showContent(toolWindow, panel);
 
+        listenForEditorChanges(project, presenter, showAllFilesCheckBox);
         presenter.refreshPropertiesData(project);
 
+    }
+
+    private void listenForEditorChanges(@NotNull Project project, PropertiesPresenter presenter, JCheckBox showAllFilesCheckBox) {
+        project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
+            @Override
+            public void selectionChanged(@NotNull FileEditorManagerEvent event) {
+                VirtualFile file = event.getNewFile();
+                if (file != null && file.getName().endsWith(".properties")) {
+                    String basePath = project.getBasePath();
+                    if (basePath != null) {
+                        String relativePath = file.getPath().substring(basePath.length());
+                        presenter.getTableModel().setFocusedFile(relativePath);
+                        showAllFilesCheckBox.setVisible(true);
+                    }
+                } else {
+                    presenter.getTableModel().setFocusedFile(null);
+                    showAllFilesCheckBox.setVisible(false);
+                }
+            }
+        });
     }
 
     private void listenForFileChanges(@NotNull Project project, PropertiesPresenter presenter) {
