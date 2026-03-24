@@ -50,12 +50,23 @@ class PropsTableModel extends DefaultTableModel {
         }
     }
 
+    void replaceAll(List<Object> newItems) {
+        items.clear();
+        displayItems.clear();
+        validFiles.clear();
+        for (Object item : newItems) {
+            items.add(item);
+            if (item instanceof ValidFile) {
+                validFiles.add((ValidFile) item);
+            }
+        }
+        rebuildRows();
+    }
+
     void clear() {
         items.clear();
         displayItems.clear();
         validFiles.clear();
-        sortColumn = -1;
-        sortAscending = true;
         while (getRowCount() > 0) {
             removeRow(0);
         }

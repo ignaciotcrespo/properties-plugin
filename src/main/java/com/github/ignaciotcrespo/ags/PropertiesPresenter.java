@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static com.github.ignaciotcrespo.ags.RxUtils.avoidFastClicks;
 import static com.github.ignaciotcrespo.ags.RxUtils.doubleClick;
@@ -91,14 +90,16 @@ class PropertiesPresenter {
     }
 
     private void refresh(@NotNull Project project, PropsTableModel tableModel) {
+        List<Object> allItems = new ArrayList<>();
         getValidFilesObservable(project)
-                .delay(1, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.newThread())
-                .doOnNext(item -> Utils.runInUiThread(() -> tableModel.addItem(item)))
-                .flatMap(this::getItemsObservable)
-                .doOnNext(item -> Utils.runInUiThread(() -> tableModel.addItem(item)))
-                .doOnSubscribe(disposable -> tableModel.clear())
+                .observeOn(Schedulers.io())
+                .doOnNext(validFile -> {
+                    allItems.add(validFile);
+                    getItemsObservable(validFile)
+                            .blockingForEach(allItems::add);
+                })
+                .doOnComplete(() -> Utils.runInUiThread(() -> tableModel.replaceAll(allItems)))
                 .subscribe();
     }
 
@@ -167,7 +168,10 @@ class PropertiesPresenter {
     private void searchProperties(Emitter<Item> emitter, ValidFile file) {
         Properties props = new Properties();
         try {
-            props.load(new FileInputStream(file.file));
+            java.nio.charset.Charset charset = file.virtualFile != null
+                    ? file.virtualFile.getCharset()
+                    : java.nio.charset.StandardCharsets.UTF_8;
+            props.load(new InputStreamReader(new FileInputStream(file.file), charset));
             Enumeration<?> propertyNames = props.propertyNames();
             Map<String, Item> map = new TreeMap<>();
             while (propertyNames.hasMoreElements()) {

@@ -1,6 +1,9 @@
 package com.github.ignaciotcrespo.ags;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.openapi.vfs.newvfs.BulkFileListener;
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBScrollPane;
@@ -12,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.util.List;
 
 public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
@@ -40,13 +44,12 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
     }
 
     private void listenForFileChanges(@NotNull Project project, PropertiesPresenter presenter) {
-//        MessageBusConnection bus = project.getMessageBus().connect();
-//        bus.subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener(){
-//            @Override
-//            public void after(@NotNull List<? extends VFileEvent> events) {
-//                presenter.onVFileModified(events, project);
-//            }
-//        });
+        project.getMessageBus().connect().subscribe(VirtualFileManager.VFS_CHANGES, new BulkFileListener() {
+            @Override
+            public void after(@NotNull List<? extends VFileEvent> events) {
+                presenter.onVFileModified(events, project);
+            }
+        });
     }
 
     @NotNull
