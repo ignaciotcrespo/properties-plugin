@@ -20,14 +20,14 @@ java {
 }
 
 intellij {
-    version.set("2023.3")
-    type.set("IC") // IntelliJ Community Edition
+    version.set("2022.3")
+    type.set("IC")
     updateSinceUntilBuild.set(false)
 }
 
 tasks {
     patchPluginXml {
-        sinceBuild.set("233")
+        sinceBuild.set("223")
     }
 
     buildSearchableOptions {

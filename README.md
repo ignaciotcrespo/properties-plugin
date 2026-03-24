@@ -34,7 +34,7 @@ The plugin zip will be in `build/distributions/`.
 
 ## Requirements
 
-- IntelliJ IDEA 2023.3+
+- IntelliJ IDEA 2022.3+ (and all JetBrains IDEs: Android Studio, WebStorm, PyCharm, etc.)
 - Java 17+
 
 ## License
