@@ -1,26 +1,20 @@
 package com.github.ignaciotcrespo.ags;
 
 import com.intellij.ide.BrowserUtil;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.openapi.vfs.newvfs.BulkFileListener;
-import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.table.JBTable;
-import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
 import java.awt.*;
 import java.net.URL;
-import java.util.List;
 
 public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
 
@@ -62,7 +56,7 @@ public class GradleSwitchesToolWindowFactory implements ToolWindowFactory {
     }
 
     private void showContent(@NotNull ToolWindow toolWindow, JPanel panel) {
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        ContentFactory contentFactory = ContentFactory.getInstance();
         Content content = contentFactory.createContent(panel, "", false);
         toolWindow.getContentManager().addContent(content);
     }

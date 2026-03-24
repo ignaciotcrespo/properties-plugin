@@ -5,7 +5,6 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.event.MouseEvent;
 import java.util.concurrent.TimeUnit;
 
 public class RxUtils {
