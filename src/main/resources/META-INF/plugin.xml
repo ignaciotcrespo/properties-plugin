@@ -18,6 +18,13 @@
     ]]></description>
 
   <change-notes><![CDATA[
+      <b>1.3.1</b>
+      <ul>
+        <li>Auto-filter to focused file when a .properties file is open in the editor</li>
+        <li>Fixed UTF-8 and charset support for property values</li>
+        <li>Auto-refresh when .properties files are modified</li>
+        <li>Preserve sorting and filters on refresh without blanking the table</li>
+      </ul>
       <b>1.3.0</b>
       <ul>
         <li>Migrated to Gradle build system</li>
